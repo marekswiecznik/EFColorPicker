@@ -44,6 +44,10 @@ public class EFSliderView: EFControl {
 
     // The maximum value of the slider. The default value is 1.0.
     var maximumValue: CGFloat = 1
+    
+    private var isLandscape: Bool {
+        return bounds != .zero ? bounds.width < bounds.height : false
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -132,23 +136,30 @@ public class EFSliderView: EFControl {
         let translation = gestureRecognizer.translation(in: self)
         gestureRecognizer.setTranslation(CGPoint.zero, in: self)
 
-        self.ef_setValueWithTranslation(translation: translation.x)
+        self.ef_setValueWithTranslation(translation: isLandscape ? -translation.y : translation.x)
     }
 
     func ef_updateTrackLayer() {
-        let height: CGFloat = EFSliderViewHeight
-        let width: CGFloat = self.bounds.width
+        let height: CGFloat = isLandscape ? self.bounds.height : EFSliderViewHeight
+        let width: CGFloat = isLandscape ? EFSliderViewHeight : self.bounds.width
 
         CATransaction.begin()
         CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
-        trackLayer.bounds = CGRect(x: 0, y: 0, width: width, height: EFSliderViewTrackHeight)
-        trackLayer.position = CGPoint(x: self.bounds.width / 2, y: height / 2)
+        if isLandscape {
+            trackLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
+            trackLayer.endPoint = CGPoint(x: 0.5, y: 0.0)
+        } else {
+            trackLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
+            trackLayer.endPoint = CGPoint(x: 1.0, y: 0.5)
+        }
+        trackLayer.bounds = isLandscape ?  CGRect(x: 0, y: 0, width: EFSliderViewTrackHeight, height: height): CGRect(x: 0, y: 0, width: width, height: EFSliderViewTrackHeight)
+        trackLayer.position = CGPoint(x: width / 2, y: height / 2)
         CATransaction.commit()
     }
 
     // MARK:- Private methods
     private func ef_setValueWithTranslation(translation: CGFloat) {
-        let width: CGFloat = self.bounds.width - thumbView.bounds.width
+        let width: CGFloat = isLandscape ? self.bounds.height - thumbView.bounds.height : self.bounds.width - thumbView.bounds.width
         let valueRange: CGFloat = maximumValue - minimumValue
         let value: CGFloat = self.value + valueRange * translation / width
 
@@ -178,7 +189,7 @@ public class EFSliderView: EFControl {
     private func ef_updateThumbPositionWithValue(value: CGFloat) {
         let thumbWidth: CGFloat = thumbView.bounds.width
         let thumbHeight: CGFloat = thumbView.bounds.height
-        let width: CGFloat = self.bounds.width - thumbWidth
+        let width: CGFloat = isLandscape ? self.bounds.height - thumbHeight : self.bounds.width - thumbWidth
 
         if width == 0 {
             return
@@ -186,6 +197,6 @@ public class EFSliderView: EFControl {
 
         let percentage: CGFloat = (value - minimumValue) / (maximumValue - minimumValue)
         let position: CGFloat = width * percentage
-        thumbView.frame = CGRect(x: position, y: 0, width: thumbWidth, height: thumbHeight)
+        thumbView.frame = isLandscape ? CGRect(x: 0, y: width - position, width: thumbWidth, height: thumbHeight) : CGRect(x: position, y: 0, width: thumbWidth, height: thumbHeight)
     }
 }
