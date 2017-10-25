@@ -37,7 +37,7 @@ public class EFSliderView: EFControl {
     private let trackLayer: CAGradientLayer = CAGradientLayer()
 
     // The slider's current value. The default value is 0.0.
-    private(set) var value: CGFloat = 0
+    public private(set) var value: CGFloat = 0
 
     // The minimum value of the slider. The default value is 0.0.
     var minimumValue: CGFloat = 0
@@ -48,8 +48,18 @@ public class EFSliderView: EFControl {
     override init(frame: CGRect) {
         super.init(frame: frame)
 
-        self.accessibilityLabel = "color_slider"
+        initView()
+    }
 
+    required public init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        
+        initView()
+    }
+    
+    func initView() {
+        self.accessibilityLabel = "color_slider"
+        
         minimumValue = 0.0
         maximumValue = 1.0
         value = 0.0
@@ -72,10 +82,6 @@ public class EFSliderView: EFControl {
         self.setColors(colors: [color, color])
     }
 
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
     override open class var requiresConstraintBasedLayout: Bool {
         get {
             return true
@@ -88,7 +94,7 @@ public class EFSliderView: EFControl {
         }
     }
 
-    func setValue(value: CGFloat) {
+    public func setValue(value: CGFloat) {
         if (value < minimumValue) {
             self.value = minimumValue
         } else if (value > maximumValue) {
@@ -103,7 +109,7 @@ public class EFSliderView: EFControl {
     // Sets the array of CGColorRef objects defining the color of each gradient stop on the track.
     // The location of each gradient stop is evaluated with formula: i * width_of_the_track / number_of_colors.
     // @param colors An array of CGColorRef objects.
-    func setColors(colors: [CGColor]) {
+    public func setColors(colors: [CGColor]) {
         if colors.count <= 1 {
             fatalError("‘colors: [CGColor]’ at least need to have 2 elements")
         }
