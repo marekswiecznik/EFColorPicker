@@ -28,12 +28,12 @@ import UIKit
 
 // The delegate of a EFColorSelectionViewController object must adopt the EFColorSelectionViewController protocol.
 // Methods of the protocol allow the delegate to handle color value changes.
-public protocol EFColorSelectionViewControllerDelegate: class {
+@objc public protocol EFColorSelectionViewControllerDelegate: NSObjectProtocol {
 
     // Tells the data source to return the color components.
     // @param colorViewCntroller The color view.
     // @param color The new color value.
-    func colorViewController(colorViewCntroller: EFColorSelectionViewController, didChangeColor color: UIColor)
+    func colorViewController(_ colorViewCntroller: EFColorSelectionViewController, didChangeColor color: UIColor)
 }
 
 public class EFColorSelectionViewController: UIViewController, EFColorViewDelegate {
@@ -82,7 +82,7 @@ public class EFColorSelectionViewController: UIViewController, EFColorViewDelega
         segmentControl.addTarget(
             self,
             action: #selector(segmentControlDidChangeValue(_:)),
-            for: UIControlEvents.valueChanged
+            for: UIControl.Event.valueChanged
         )
         segmentControl.selectedSegmentIndex = 0
         self.navigationItem.titleView = segmentControl
@@ -109,7 +109,7 @@ public class EFColorSelectionViewController: UIViewController, EFColorViewDelega
     }
 
     // MARK:- EFColorViewDelegate
-    public func colorView(colorView: EFColorView, didChangeColor color: UIColor) {
-        self.delegate?.colorViewController(colorViewCntroller: self, didChangeColor: color)
+    public func colorView(_ colorView: EFColorView, didChangeColor color: UIColor) {
+        self.delegate?.colorViewController(self, didChangeColor: color)
     }
 }

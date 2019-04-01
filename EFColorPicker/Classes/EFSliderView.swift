@@ -25,12 +25,15 @@
 //  THE SOFTWARE.
 
 import Foundation
+import CoreGraphics
+import QuartzCore
+import UIKit
 
 public class EFSliderView: EFControl {
 
     let EFSliderViewHeight: CGFloat = 28.0
     let EFSliderViewMinWidth: CGFloat = 150.0
-    let EFSliderViewTrackHeight: CGFloat = 3.0
+    let EFSliderViewTrackHeight: CGFloat = 6.0
     let EFThumbViewEdgeInset: CGFloat = -10.0
 
     private let thumbView: EFThumbView = EFThumbView()
@@ -48,6 +51,9 @@ public class EFSliderView: EFControl {
     private var isLandscape: Bool {
         return bounds != .zero ? bounds.width < bounds.height : false
     }
+
+    // Indicates if the user touches the control at the moment
+    var isTouched = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -82,7 +88,7 @@ public class EFSliderView: EFControl {
         thumbView.gestureRecognizer.addTarget(self, action: #selector(ef_didPanThumbView(gestureRecognizer:)))
         self.addSubview(thumbView)
 
-        let color = UIColor.blue.cgColor
+        let color = UIColor.blue
         self.setColors(colors: [color, color])
     }
 
@@ -113,11 +119,14 @@ public class EFSliderView: EFControl {
     // Sets the array of CGColorRef objects defining the color of each gradient stop on the track.
     // The location of each gradient stop is evaluated with formula: i * width_of_the_track / number_of_colors.
     // @param colors An array of CGColorRef objects.
-    public func setColors(colors: [CGColor]) {
-        if colors.count <= 1 {
+    public func setColors(colors: [UIColor]) {
+        let cgColors = colors.map { color -> CGColor in
+            return color.cgColor
+        }
+        if cgColors.count <= 1 {
             fatalError("‘colors: [CGColor]’ at least need to have 2 elements")
         }
-        trackLayer.colors = colors
+        trackLayer.colors = cgColors
         self.ef_updateLocations()
     }
 
@@ -128,8 +137,14 @@ public class EFSliderView: EFControl {
 
     // MARK:- UIControl touch tracking events
     @objc func ef_didPanThumbView(gestureRecognizer: UIPanGestureRecognizer) {
-        if gestureRecognizer.state != UIGestureRecognizerState.began
-            && gestureRecognizer.state != UIGestureRecognizerState.changed {
+        if gestureRecognizer.state == UIGestureRecognizer.State.ended {
+            self.isTouched = false
+        } else if gestureRecognizer.state == UIGestureRecognizer.State.began {
+            self.isTouched = true
+        }
+
+        if gestureRecognizer.state != UIGestureRecognizer.State.began
+            && gestureRecognizer.state != UIGestureRecognizer.State.changed {
             return
         }
 
@@ -164,7 +179,7 @@ public class EFSliderView: EFControl {
         let value: CGFloat = self.value + valueRange * translation / width
 
         self.setValue(value: value)
-        self.sendActions(for: UIControlEvents.valueChanged)
+        self.sendActions(for: UIControl.Event.valueChanged)
     }
 
     private func ef_updateLocations() {
