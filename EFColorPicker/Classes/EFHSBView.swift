@@ -42,6 +42,18 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
 
     weak public var delegate: EFColorViewDelegate?
 
+    public var isTouched: Bool {
+        if self.colorWheel.isTouched {
+            return true
+        }
+
+        if self.brightnessView.isTouched {
+            return true
+        }
+
+        return false
+    }
+
     public var color: UIColor {
         get {
             return UIColor(
@@ -71,6 +83,7 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
         colorSample.backgroundColor = self.color
         colorSample.accessibilityValue = EFHexStringFromColor(color: self.color)
         self.ef_reloadViewsWithColorComponents(colorComponents: colorComponents)
+        self.colorWheel.display(self.colorWheel.layer)
     }
 
     override public func updateConstraints() {
@@ -95,13 +108,14 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
         brightnessView.maximumValue = EFHSBColorComponentMaxValue
         brightnessView.format = "%.2f"
         brightnessView.translatesAutoresizingMaskIntoConstraints = false
+        brightnessView.setColors(colors: [UIColor.black, UIColor.white])
         self.addSubview(brightnessView)
 
         colorWheel.addTarget(
-            self, action: #selector(ef_colorDidChangeValue(sender:)), for: UIControlEvents.valueChanged
+            self, action: #selector(ef_colorDidChangeValue(sender:)), for: UIControl.Event.valueChanged
         )
         brightnessView.addTarget(
-            self, action: #selector(ef_brightnessDidChangeValue(sender:)), for: UIControlEvents.valueChanged
+            self, action: #selector(ef_brightnessDidChangeValue(sender:)), for: UIControl.Event.valueChanged
         )
 
         self.setNeedsUpdateConstraints()
@@ -143,7 +157,7 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
             layoutConstraints.append(
                 contentsOf: NSLayoutConstraint.constraints(
                     withVisualFormat: visualFormat,
-                    options: NSLayoutFormatOptions(rawValue: 0),
+                    options: NSLayoutConstraint.FormatOptions(rawValue: 0),
                     metrics: metrics,
                     views: views
                 )
@@ -152,10 +166,10 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
         layoutConstraints.append(
             NSLayoutConstraint(
                 item: colorWheel,
-                attribute: NSLayoutAttribute.width,
-                relatedBy: NSLayoutRelation.equal,
+                attribute: NSLayoutConstraint.Attribute.width,
+                relatedBy: NSLayoutConstraint.Relation.equal,
                 toItem: colorWheel,
-                attribute: NSLayoutAttribute.height,
+                attribute: NSLayoutConstraint.Attribute.height,
                 multiplier: 1,
                 constant: 0)
         )
@@ -184,7 +198,7 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
             layoutConstraints.append(
                 contentsOf: NSLayoutConstraint.constraints(
                     withVisualFormat: visualFormat,
-                    options: NSLayoutFormatOptions(rawValue: 0),
+                    options: NSLayoutConstraint.FormatOptions(rawValue: 0),
                     metrics: metrics,
                     views: views
                 )
@@ -193,20 +207,20 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
         layoutConstraints.append(
             NSLayoutConstraint(
                 item: colorWheel,
-                attribute: NSLayoutAttribute.width,
-                relatedBy: NSLayoutRelation.equal,
+                attribute: NSLayoutConstraint.Attribute.width,
+                relatedBy: NSLayoutConstraint.Relation.equal,
                 toItem: colorWheel,
-                attribute: NSLayoutAttribute.height,
+                attribute: NSLayoutConstraint.Attribute.height,
                 multiplier: 1,
                 constant: 0)
         )
         layoutConstraints.append(
             NSLayoutConstraint(
                 item: brightnessView,
-                attribute: NSLayoutAttribute.centerY,
-                relatedBy: NSLayoutRelation.equal,
+                attribute: NSLayoutConstraint.Attribute.centerY,
+                relatedBy: NSLayoutConstraint.Relation.equal,
                 toItem: self,
-                attribute: NSLayoutAttribute.centerY,
+                attribute: NSLayoutConstraint.Attribute.centerY,
                 multiplier: 1,
                 constant: 0)
         )
@@ -216,27 +230,25 @@ public class EFHSBView: UIView, EFColorView, UITextFieldDelegate {
     private func ef_reloadViewsWithColorComponents(colorComponents: HSB) {
         colorWheel.hue = colorComponents.hue
         colorWheel.saturation = colorComponents.saturation
+        colorWheel.brightness = colorComponents.brightness
         self.ef_updateSlidersWithColorComponents(colorComponents: colorComponents)
     }
 
     private func ef_updateSlidersWithColorComponents(colorComponents: HSB) {
         brightnessView.value = colorComponents.brightness
-        let tmp: UIColor = UIColor(
-            hue: colorComponents.hue, saturation: colorComponents.saturation , brightness: 1, alpha: 1
-        )
-        brightnessView.setColors(colors: [UIColor.black.cgColor, tmp.cgColor])
     }
 
     @objc private func ef_colorDidChangeValue(sender: EFColorWheelView) {
         colorComponents.hue = sender.hue
         colorComponents.saturation = sender.saturation
-        self.delegate?.colorView(colorView: self, didChangeColor: self.color)
+        self.delegate?.colorView(self, didChangeColor: self.color)
         self.reloadData()
     }
 
     @objc private func ef_brightnessDidChangeValue(sender: EFColorComponentView) {
         colorComponents.brightness = sender.value
-        self.delegate?.colorView(colorView: self, didChangeColor: self.color)
+        self.colorWheel.brightness = sender.value
+        self.delegate?.colorView(self, didChangeColor: self.color)
         self.reloadData()
     }
 }
